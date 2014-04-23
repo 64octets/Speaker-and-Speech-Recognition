@@ -1,0 +1,159 @@
+Part 2.3
+
+I hypothesize that as we increase our number of gaussians(M) we will start overfitting and if we decrease  our number of
+gaussians we will star underfitting. If we increase epsilon to a very high value we will  stop our EM algorithm too
+early before we actually get a good model of the data. This will cause our  accuracy to decrease. If we stop too late we
+might start overfitting the data and not generalize well.
+
+If we decrease the number of speakers it should not effect our accuracy as long as we also remove the  corresponding
+speakers from the test data. This is because we will simply just have less models to compare the test data with. If we
+do keep the speakers in the test data our accuracy will decrease because we  will not have a model of this speaker and
+therefore won't provide it as an answer.
+
+I am going to keep the epsilon value constant and run for 30 iterations. Keeping the epsilon value  constant to 0.1
+allows the variance to not get too low with 30 iterations so we don't overfit the training data.
+
+Tests with different components:
+
+M = 8 epsilon = 0.1    
+ 	Classification error: 0.0% 
+M = 10   epsilon = 0.1    
+ 	Classification error: 0.0% 
+M = 15 epsilon = 0.1     
+ 	Classification error: 0.0%
+M = 5    epsilon = 0.1     
+	Classification error: 0.0% 
+M = 3    epsilon = 0.1     
+	Classification error: 0.13%
+
+As we can see the classification decreases as we decrease the number of components. This task is very simple or our test
+set is very simple because we can get a very low classification error without going through many iterations and without
+having many components. As we decrease the number of components we are underfitting the data and therfore we should see
+our classification error increase. Having less possible speakers will
+
+Next I will vary the epsilon value. This should not make a big difference unless I make this value very large. This
+value checks the improvement at each step and if the improvement below this value we say we converge and stop training.
+So if this value is very large we expect to stop training too early and thus increase our classification error. If this
+value is very low and our number of iterations is very high we will take a long time and actually do worse on test data
+because we will not generalize well.
+
+Tests with different epsilon:
+ M = 8 epsilon = 0.1     
+ 	Classification error: 0.0% 
+ M = 8 epsilon = 10
+    Classification error: 0.0% 
+ M = 8 epsilon = 100    
+ 	Classification error: 0.0% 
+ M = 8 epsilon = 10000
+    Classification error: 0.13%
+
+As we can see the classification decreases as our epsilon value increase by alot. This is because we are underfitting
+the data.
+
+
+1) Without adding more traning data, we can iterate for longer and lower our epsilon to ensure we learn more. We can also
+ try initializing our means and weights with k-means. If we do a bit of pre-training with k-means it will guide the actual 
+ gaussian mixture learning to the minimas of the training data.  
+
+2) This could be done by checking the log likelihood values. We could say that if the log likelihood values are all below
+ a certain number we say none of the model speakers made the test utterance. This number would depend on how expensive 
+ it is to have an incorrect answer. If it's very expensive then we can make it very high and if it's not we can set it
+ to a low value.
+
+3) We can use Hidden Markov Models or pattern recognition techniques with neural networks to do speaker recognition. 
+A simple multi-layered perceptron neural network trained with back propagation could perform fairly well.
+
+-----------------------------------------------------------------------------------------------------------------------------
+Part 3.2
+
+Due to the running time of training and testing I was only able to finish 8 experiments. I decided to start with
+default settings for all parameters and then compare changes with this base setting. This allowed me to see what
+changes increased my accuracy and which changes decreased it. I also ran experiments by removing some data and 
+lowering the dimension of the data to see how this effects are accuracy. I was not able to use PCA with this task
+due to time constraint but I would expect it do better than simply removing 1 dimension from the data arbitrarily.
+
+
+My base settings were:
+All data
+d = 14
+M = 8
+Q = 3
+Classification accuracy = 44.98%
+
+These base settings give a classification accuracy of almost 45%. Furthur experiments will try to improve on this.
+
+
+Tests on different number of mixture states:
+
+M = 5:
+	Classification accuracy = 48.08%
+
+M = 3:
+	Classification accuracy = 48.72%
+
+It seems with the base settings we were overfitting the training data. Decreasing the number of mixtures states 
+improved our accuracy. I would expect our accuracy to decrease if we lowered M anymore. This is because we would
+be underfitting the data.
+
+
+
+Tests on number of hidden states:
+
+Q = 2:
+	Classification accuracy =  45.26%
+Q = 1: 
+	Classification accuracy =  45.07%
+
+Using these experiments along with the base experiment we can clearly see that 2 is the optimal value for the 
+number of hidden states. We achieved the highest accuracy and if we increased or decreased by one state we 
+decreased our accuracy.
+
+Tests on the amount of training data used:
+
+Used half of the data: 
+	Classification accuracy = 44.98%
+Use third of the data:
+	Classification accuracy = 43.54%
+
+Surprisingly I felt that using less of the data had no effect of the running time of the experiments. Also using
+less of the data as I predicted achieved a lower accuracy. This is simply because we did not learn as well with less
+data.
+
+Tests on different dimensions of the data:
+
+d = 10:
+	Classification accuracy: 40.32%
+
+Decreasing the dimension of the data arbitrarily was a terrible idea. This caused our accuracy to drop by almost 5%.
+Removing a dimension made us lose important information about the data such that it made it harder to 
+classify. This dimension may have had a low entropy which would explain the sudden decrease in classification accuracy.
+I would expect PCA to perform better. 
+---------------------------------------------------------------------------------------------------------------------------
+Part 3.3 Word Error Rates
+
+The following is my output of running Levenshtein on the test data:
+SE = 0.1654
+IE = 0.0423
+DE = 0.0500
+DIST = 0.2577
+----------------------------------------------------------------------------------------------------------------------------
+BONUS: PCA
+For the bonus part of the assignment I implemented the PCA dimensionality reduction algorithm.
+The code is in the file pca.m and it is used in gmmClassifyPCA.m and gmmTraingPCA.m.
+I ran experiments on the speaker reognition part of the assignment and recieved great results.
+This may be because the classification for that part of the assignment is fairly easy to do.
+
+Tests:
+d = 10:
+	Classification Accuracy = 100%
+d = 5
+	Classification Accuracy = 100%
+
+To run the experiments simply update the file gmmClassify. The first line calls the
+gmmTrain function. The last argument is the argument for pca. It will reduce the dimensions
+of the data to that many dimensions. Obviously setting that argument to anything above 14 
+would cause errors.
+
+So update this line in gmmClassify:
+gmms = gmmTrainPCA('/u/cs401/speechdata/Training/',10,0.001,8, K)
+where K represents the amount of dimensions you want in the data.
